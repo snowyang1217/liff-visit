@@ -64,4 +64,4 @@ document
   .getElementById("submitButton")
   .addEventListener("click", submitVisit);
 
-//initializeLiff();
+initializeLiff();
