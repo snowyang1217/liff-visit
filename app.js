@@ -1,67 +1,54 @@
 let lineProfile = null;
 
+/**
+ * 初始化 LINE LIFF 並取得使用者資料
+ */
 async function initializeLiff() {
-  try {
-    await liff.init({
-      liffId: CONFIG.LIFF_ID
-    });
+    const isLocalhost =
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "localhost";
 
-    console.log("LIFF 初始化成功");
+    try {
+        await liff.init({
+            liffId: CONFIG.LIFF_ID
+        });
 
-    if (!liff.isLoggedIn()) {
-      console.log("目前尚未登入 LINE");
+        console.log("LIFF 初始化成功");
 
-      // 本機測試時先不要自動登入，避免 localhost 導向問題
-      return;
+        // 本機測試不強制登入 LINE
+        if (isLocalhost) {
+            console.log("目前為本機測試");
+
+            if (typeof updateSalesName === "function") {
+                updateSalesName("本機測試");
+            }
+
+            return;
+        }
+
+        // 正式網址若尚未登入，就導向 LINE 登入
+        if (!liff.isLoggedIn()) {
+            console.log("目前尚未登入 LINE");
+
+            liff.login({
+                redirectUri: window.location.href
+            });
+
+            return;
+        }
+
+        lineProfile = await liff.getProfile();
+
+        console.log("LINE 使用者：", lineProfile.displayName);
+
+        if (typeof updateSalesName === "function") {
+            updateSalesName(lineProfile.displayName);
+        }
+    } catch (error) {
+        console.error("LIFF 初始化失敗：", error);
+
+        if (typeof updateSalesName === "function") {
+            updateSalesName("無法取得 LINE 名稱");
+        }
     }
-
-    lineProfile = await liff.getProfile();
-
-    console.log("LINE 使用者：", lineProfile.displayName);
-  } catch (error) {
-    console.error("LIFF 初始化失敗：", error);
-  }
 }
-
-async function submitVisit() {
-  const submitButton = document.getElementById("submitButton");
-
-  try {
-    submitButton.disabled = true;
-    submitButton.textContent = "送出中...";
-
-    const data = {
-      userId: lineProfile?.userId ?? "",
-      businessName: lineProfile?.displayName ?? "本機測試",
-      customer: "測試客戶",
-      content: "第一筆 LIFF 測試資料",
-      datetime: new Date().toISOString()
-    };
-
-    const response = await fetch(CONFIG.WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Webhook 回傳錯誤：${response.status}`);
-    }
-
-    alert("資料已成功送到 Make");
-  } catch (error) {
-    console.error(error);
-    alert("送出失敗，請查看瀏覽器 Console");
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = "送出";
-  }
-}
-
-//document
-//  .getElementById("submitButton")
-//  .addEventListener("click", submitVisit);
-
-initializeLiff();

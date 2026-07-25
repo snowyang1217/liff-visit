@@ -1,3 +1,11 @@
+function updateSalesName(name) {
+    const salesNameElement = document.getElementById("salesName");
+
+    if (salesNameElement) {
+        salesNameElement.textContent = name || "尚未取得";
+    }
+}
+
 function renderVisitPage() {
     const app = document.getElementById("app");
 
@@ -19,8 +27,8 @@ function renderVisitPage() {
                 <div class="info-item">
                     <span>業務人員</span>
                     <strong id="salesName">
-                        ${lineProfile?.displayName || "尚未取得 LINE 名稱"}
-                    </strong>
+                        讀取 LINE 使用者中…
+                        </strong>
                 </div>
 
                 <div class="info-row">
@@ -177,4 +185,6 @@ function renderVisitPage() {
 
         alert("表單畫面測試成功，下一步再串接 Make。");
     });
+
+    initializeLiff();
 }
