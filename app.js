@@ -60,8 +60,8 @@ async function submitVisit() {
   }
 }
 
-document
-  .getElementById("submitButton")
-  .addEventListener("click", submitVisit);
+//document
+//  .getElementById("submitButton")
+//  .addEventListener("click", submitVisit);
 
 initializeLiff();
