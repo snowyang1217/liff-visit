@@ -9,9 +9,7 @@ function updateSalesName(name) {
 function renderVisitPage() {
     const app = document.getElementById("app");
 
-    const now = new Date();
-    const visitDate = now.toISOString().slice(0, 10);
-    const visitTime = now.toTimeString().slice(0, 5);
+    const { date: visitDate, time: visitTime } = getLocalDateTime();
 
     app.innerHTML = `
         <main class="visit-page">
@@ -174,16 +172,51 @@ function renderVisitPage() {
                 <button id="submitButton" type="submit" class="submit-button">
                     送出拜訪紀錄
                 </button>
+
+                <p id="formMessage" role="status" aria-live="polite" hidden></p>
             </form>
         </main>
     `;
 
     const visitForm = document.getElementById("visitForm");
 
-    visitForm.addEventListener("submit", function (event) {
+    visitForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        alert("表單畫面測試成功，下一步再串接 Make。");
+        const submitButton = document.getElementById("submitButton");
+        const formData = new FormData(visitForm);
+        const payload = Object.fromEntries(formData.entries());
+
+        payload.salesName = lineProfile?.displayName || "";
+        payload.lineUserId = lineProfile?.userId || "";
+        payload.visitDate = visitDate;
+        payload.visitTime = visitTime;
+        payload.source = "LINE_LIFF";
+        payload.submittedAt = new Date().toISOString();
+
+        hideMessage();
+        showLoading(submitButton);
+
+        try {
+            const response = await postJson(CONFIG.WEBHOOK_URL, payload);
+
+            if (response.success === false) {
+                throw new Error(response.message || "Make 回傳失敗");
+            }
+
+            showMessage("拜訪紀錄已成功送出。", "success");
+            visitForm.reset();
+        } catch (error) {
+            console.error("拜訪紀錄送出失敗：", error);
+
+            const errorMessage = error.name === "AbortError"
+                ? "連線逾時，請確認網路後再試一次。"
+                : "送出失敗，請確認 Make Scenario 與 Webhook 是否已啟用。";
+
+            showMessage(errorMessage, "error");
+        } finally {
+            hideLoading(submitButton);
+        }
     });
 
     initializeLiff();
