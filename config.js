@@ -4,6 +4,6 @@ const CONFIG = {
     LIFF_ID: "2010246946-BKtkjkvh",
 
     // Make Webhook
-    WEBHOOK_URL: "https://hook.us2.make.com/pquw6gsrvtd1c937lljbguq5xh6y7o7a"
+    WEBHOOK_URL: "https://hook.us2.make.com/ujqd6n0f6en8aqm0f1o3kon3185c8544"
 
 };
