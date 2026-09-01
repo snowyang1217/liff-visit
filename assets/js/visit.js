@@ -228,4 +228,9 @@
   }
 
     initializeLiff();
+
+      window.VisitPage = {
+      render
+    };
+  })();
 })();
