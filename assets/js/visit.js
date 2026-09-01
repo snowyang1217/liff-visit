@@ -227,11 +227,5 @@
       .addEventListener("submit", submitVisit);
   }
 
-    visitForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        alert("表單畫面測試成功，下一步再串接 Make。");
-    });
-
     initializeLiff();
-}
+})();

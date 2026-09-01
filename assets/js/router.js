@@ -27,12 +27,9 @@ console.log("Current Page:", page);
 // =========================================
 
 switch (page) {
-
-    case "visit":
-
-        renderVisitPage();
-
-        break;
+  case "visit":
+    window.VisitPage.render();
+    break;
 
 
     case "stock":
