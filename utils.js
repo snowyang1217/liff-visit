@@ -79,8 +79,19 @@
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const text = await response.text();
-      return text ? JSON.parse(text) : {};
+     const text = await response.text();
+
+    if (!text) {
+  return {};
+    }   
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {
+       message: text
+      };
+    }
     } finally {
       window.clearTimeout(timeout);
     }
