@@ -248,3 +248,12 @@ textarea::placeholder {
     background:#eef5ff;
 
 }
+.form-group:has([name="visitType"]),
+.form-group:has([name="productCategory"]),
+.form-group:has([name="subject"]),
+.form-group:has([name="content"]),
+.form-group:has([name="customerNeed"]),
+.form-group:has([name="result"]),
+.form-group:has([name="nextFollowDate"]) {
+  display: none !important;
+}
