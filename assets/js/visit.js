@@ -1,7 +1,5 @@
 (function () {
   const config = window.APP_CONFIG || {};
-  const utils = window.AppUtils || {};
-
   const {
     escapeHtml,
     isConfigured,
@@ -11,11 +9,23 @@
     showLoading,
     hideLoading,
     fetchJson
-  } = utils;
+  } = window.AppUtils;
+
+  function field(label, control, required = false) {
+    return `
+      <label class="field">
+        <span>${label}${required ? '<b aria-hidden="true">*</b>' : ""}</span>
+        ${control}
+      </label>
+    `;
+  }
 
   function render() {
     const app = document.getElementById("app");
-    const salesName = window.APP_STATE?.salesName || "";
+
+    const now = new Date();
+    const visitDate = now.toISOString().slice(0, 10);
+    const visitTime = now.toTimeString().slice(0, 5);
 
     app.innerHTML = `
       <main class="visit-page">
@@ -36,201 +46,181 @@
             <h2>拜訪資料</h2>
 
             <div class="form-grid">
-              <div class="form-group">
-                <label>業務人員</label>
-                <input
-                  name="salesName"
-                  value="${escapeHtml(salesName)}"
-                  required
-                >
-              </div>
+              ${field(
+                "業務人員",
+                `<input name="salesName"
+                        value="${escapeHtml(salesName)}"
+                        required>`,
+                true
+              )}
 
-              <div class="form-group">
-                <label>拜訪日期與時間</label>
-                <input
-                  type="datetime-local"
-                  name="visitAt"
-                  value="${localDateTime()}"
-                  required
-                >
-              </div>
+              ${field(
+                "拜訪日期與時間",
+                `<input type="datetime-local"
+                        name="visitAt"
+                        value="${localDateTime()}"
+                        required>`,
+                true
+              )}
 
-              <div class="form-group">
-                <label>醫院</label>
-                <input
-                  name="hospital"
-                  placeholder="請輸入醫院名稱"
-                  required
-                >
-              </div>
+              ${field(
+                "醫院",
+                `<input name="hospital"
+                        placeholder="請輸入醫院名稱"
+                        required>`,
+                true
+              )}
 
-              <div class="form-group">
-                <label>科別</label>
-                <input
-                  name="department"
-                  placeholder="例如：骨科、神經外科"
-                  required
-                >
-              </div>
+              ${field(
+                "科別",
+                `<input name="department"
+                        placeholder="例如：骨科、神經外科"
+                        required>`,
+                true
+              )}
 
-              <div class="form-group">
-                <label>客戶名字</label>
-                <input
-                  name="customerName"
-                  placeholder="請輸入客戶姓名"
-                  required
-                >
-              </div>
+              ${field(
+                "客戶名字",
+                `<input name="customerName"
+                        placeholder="請輸入客戶姓名"
+                        required>`,
+                true
+              )}
 
-              <div class="form-group">
-                <label>事由</label>
-                <textarea
-                  name="reason"
-                  rows="4"
-                  placeholder="請輸入本次拜訪事由"
-                  required
-                ></textarea>
-              </div>
+              ${field(
+                "事由",
+                `<textarea name="reason"
+                           rows="4"
+                           placeholder="請輸入本次拜訪事由"
+                           required></textarea>`,
+                true
+              )}
             </div>
           </section>
 
           <section class="card">
             <h2>聯絡資料</h2>
 
-            <div class="form-grid">
-              <div class="form-group">
-                <label>聯絡人</label>
-                <input
-                  name="contact"
-                  placeholder="例如：王主任"
-                >
-              </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="contact">聯絡人</label>
+                        <input
+                            id="contact"
+                            name="contact"
+                            type="text"
+                            placeholder="例如：王主任"
+                        >
+                    </div>
 
-              <div class="form-group">
-                <label>聯絡電話</label>
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="例如：03-1234567"
-                >
-              </div>
-            </div>
-          </section>
+                    <div class="form-group">
+                        <label for="phone">聯絡電話</label>
+                        <input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            placeholder="例如：03-1234567"
+                        >
+                    </div>
+                </div>
 
-          <section class="card" id="visitContentCard">
-            <h2>拜訪內容</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="visitType">拜訪類型 <b>*</b></label>
+                        <select id="visitType" name="visitType" required>
+                            <option value="">請選擇</option>
+                            <option value="例行拜訪">例行拜訪</option>
+                            <option value="新客拜訪">新客拜訪</option>
+                            <option value="產品介紹">產品介紹</option>
+                            <option value="售後服務">售後服務</option>
+                            <option value="標案拜訪">標案拜訪</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
 
-            <div class="form-group">
-              <label>拜訪類型</label>
-              <select name="visitType" required>
-                <option value="">請選擇</option>
-                <option value="例行拜訪">例行拜訪</option>
-                <option value="新客拜訪">新客拜訪</option>
-                <option value="產品介紹">產品介紹</option>
-                <option value="售後服務">售後服務</option>
-                <option value="標案拜訪">標案拜訪</option>
-                <option value="其他">其他</option>
-              </select>
-            </div>
+                    <div class="form-group">
+                        <label for="productCategory">產品類別</label>
+                        <select id="productCategory" name="productCategory">
+                            <option value="">請選擇</option>
+                            <option value="醫療設備">醫療設備</option>
+                            <option value="醫療耗材">醫療耗材</option>
+                            <option value="維修保養">維修保養</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
 
-            <div class="form-group">
-              <label>產品類別</label>
-              <select name="productCategory">
-                <option value="">請選擇</option>
-                <option value="醫療設備">醫療設備</option>
-                <option value="醫療耗材">醫療耗材</option>
-                <option value="維修保養">維修保養</option>
-                <option value="其他">其他</option>
-              </select>
-            </div>
+                <div class="form-group">
+                    <label for="subject">拜訪主旨 <b>*</b></label>
+                    <input
+                        id="subject"
+                        name="subject"
+                        type="text"
+                        placeholder="例如：血糖機產品介紹"
+                        required
+                    >
+                </div>
 
-            <div class="form-group">
-              <label>拜訪主旨</label>
-              <input
-                name="subject"
-                placeholder="例如：血糖機產品介紹"
-                required
-              >
-            </div>
+                <div class="form-group">
+                    <label for="content">拜訪內容 <b>*</b></label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        rows="5"
+                        placeholder="請記錄本次拜訪重點"
+                        required
+                    ></textarea>
+                </div>
 
-            <div class="form-group">
-              <label>拜訪內容</label>
-              <textarea
-                name="content"
-                rows="5"
-                placeholder="請記錄本次拜訪重點"
-                required
-              ></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="customerNeed">客戶需求</label>
+                    <textarea
+                        id="customerNeed"
+                        name="customerNeed"
+                        rows="3"
+                        placeholder="請記錄客戶提出的需求"
+                    ></textarea>
+                </div>
 
-            <div class="form-group">
-              <label>客戶需求</label>
-              <textarea
-                name="customerNeed"
-                rows="3"
-                placeholder="請記錄客戶提出的需求"
-              ></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="result">拜訪結果 <b>*</b></label>
+                    <select id="result" name="result" required>
+                        <option value="">請選擇</option>
+                        <option value="已成交">已成交</option>
+                        <option value="報價中">報價中</option>
+                        <option value="待追蹤">待追蹤</option>
+                        <option value="無需求">無需求</option>
+                        <option value="拜訪完成">拜訪完成</option>
+                    </select>
+                </div>
 
-            <div class="form-group">
-              <label>拜訪結果</label>
-              <select name="result" required>
-                <option value="">請選擇</option>
-                <option value="已成交">已成交</option>
-                <option value="報價中">報價中</option>
-                <option value="待追蹤">待追蹤</option>
-                <option value="無需求">無需求</option>
-                <option value="拜訪完成">拜訪完成</option>
-              </select>
-            </div>
+                <div class="form-group">
+                    <label for="nextFollowDate">下次追蹤日期</label>
+                    <input
+                        id="nextFollowDate"
+                        name="nextFollowDate"
+                        type="date"
+                    >
+                </div>
 
-            <div class="form-group">
-              <label>下次追蹤日期</label>
-              <input
-                name="nextFollowDate"
-                type="date"
-              >
-            </div>
-          </section>
+                <div class="action-grid">
+                    <button type="button" class="secondary-button" disabled>
+                        📷 拍照
+                    </button>
 
-          <section class="card">
-            <h2>費用（選填）</h2>
+                    <button type="button" class="secondary-button" disabled>
+                        📍 取得定位
+                    </button>
+                </div>
 
-            <div class="form-grid">
-              <div class="form-group">
-                <label>油錢</label>
-                <input name="fuelCost" type="number" min="0">
-              </div>
+                <p class="feature-note">
+                    拍照與定位功能將在下一階段開放。
+                </p>
 
-              <div class="form-group">
-                <label>停車費</label>
-                <input name="parkingCost" type="number" min="0">
-              </div>
-
-              <div class="form-group">
-                <label>交際費</label>
-                <input name="entertainmentCost" type="number" min="0">
-              </div>
-
-              <div class="form-group">
-                <label>雜支</label>
-                <input name="miscCost" type="number" min="0">
-              </div>
-
-              <div class="form-group">
-                <label>eTag</label>
-                <input name="eTag" type="number" min="0">
-              </div>
-            </div>
-          </section>
-
-          <div id="formMessage" class="message" hidden></div>
-
-          <button id="submitButton" type="submit" class="submit-button">
-            送出拜訪紀錄
-          </button>
-        </form>
-      </main>
+                <button id="submitButton" type="submit" class="submit-button">
+                    送出拜訪紀錄
+                </button>
+            </form>
+        </main>
     `;
 
     const hiddenFields = [
@@ -254,60 +244,12 @@
       input.required = false;
     });
 
-    document
-      .getElementById("visitForm")
-      .addEventListener("submit", submitVisit);
-  }
+    const form = document.getElementById("visitForm");
 
-  async function submitVisit(event) {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    const button = document.getElementById("submitButton");
-
-    hideMessage();
-    showLoading(button, "送出中…");
-
-    try {
-      const webhookUrl = config.WEBHOOK?.CREATE_VISIT;
-
-      if (!isConfigured(webhookUrl)) {
-        throw new Error("尚未設定 Make Webhook URL");
-      }
-
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
-
-      await fetchJson(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          ...data,
-          fuelCost: Number(data.fuelCost || 0),
-          parkingCost: Number(data.parkingCost || 0),
-          entertainmentCost: Number(data.entertainmentCost || 0),
-          miscCost: Number(data.miscCost || 0),
-          eTag: Number(data.eTag || 0),
-          submittedAt: new Date().toISOString()
-        })
-      });
-
-      showMessage("拜訪紀錄已成功送出。", "success");
-      form.reset();
-
-      form.elements.visitAt.value = localDateTime();
-      form.elements.salesName.value =
-        window.APP_STATE?.salesName || "";
-    } catch (error) {
-      showMessage(`送出失敗：${error.message}`, "error");
-    } finally {
-      hideLoading(button);
+    if (form) {
+      form.addEventListener("submit", submitVisit);
     }
   }
 
-  window.VisitPage = {
-    render
-  };
+    initializeLiff();
 })();
