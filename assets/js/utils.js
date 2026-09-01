@@ -80,7 +80,17 @@
       }
 
       const text = await response.text();
-      return text ? JSON.parse(text) : {};
+      if (!text) {
+        return {};
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch {
+      return {
+        message: text
+      };
+}
     } finally {
       window.clearTimeout(timeout);
     }
