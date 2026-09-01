@@ -1,36 +1,123 @@
-// Router 初始化
-console.log("Router Loaded");
+// =========================================
+// router.js
+// Snow LIFF CRM Template V1.0
+// =========================================
 
-// 取得網址參數
+
+// =========================================
+// Router Start
+// =========================================
+
+console.log("🚀 Router Loaded");
+
+
+// =========================================
+// 取得目前頁面
+// =========================================
+
 const params = new URLSearchParams(window.location.search);
+
 const page = params.get("page") || "visit";
 
-    console.log("Current Page:", page);
+console.log("Current Page:", page);
 
-    // 依照 page 顯示不同畫面
-    switch (page) {
+
+// =========================================
+// Router
+// =========================================
+
+switch (page) {
+
     case "visit":
-        console.log("準備呼叫 renderVisitPage()");
+
         renderVisitPage();
-        console.log("renderVisitPage() 已執行");
+
         break;
+
 
     case "stock":
-        console.log("載入：庫存查詢");
+
+        renderStockPage();
+
         break;
+
 
     case "tender":
-        console.log("載入：標案管理");
+
+        renderTenderPage();
+
         break;
+
 
     case "transfer":
-        console.log("載入：庫存調撥");
+
+        renderTransferPage();
+
         break;
+
 
     case "report":
-        console.log("載入：業績統計");
+
+        renderReportPage();
+
         break;
 
+
     default:
-        console.log("未知頁面");
-    }
+
+        render404Page();
+
+}
+
+
+// =========================================
+// 預留功能
+// =========================================
+
+function renderStockPage() {
+
+    document.getElementById("app").innerHTML = `
+        <h2>📦 庫存查詢</h2>
+        <p>V2 開放</p>
+    `;
+
+}
+
+
+function renderTenderPage() {
+
+    document.getElementById("app").innerHTML = `
+        <h2>📑 標案管理</h2>
+        <p>V2 開放</p>
+    `;
+
+}
+
+
+function renderTransferPage() {
+
+    document.getElementById("app").innerHTML = `
+        <h2>🚚 庫存調撥</h2>
+        <p>V2 開放</p>
+    `;
+
+}
+
+
+function renderReportPage() {
+
+    document.getElementById("app").innerHTML = `
+        <h2>📈 業績統計</h2>
+        <p>V2 開放</p>
+    `;
+
+}
+
+
+function render404Page() {
+
+    document.getElementById("app").innerHTML = `
+        <h2>⚠️ 找不到頁面</h2>
+    `;
+
+}

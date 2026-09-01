@@ -1,54 +1,221 @@
+// =========================================
+// app.js
+// Snow LIFF CRM Template V1.0
+// =========================================
+
+
+// =========================================
+// 全域變數
+// =========================================
+
 let lineProfile = null;
 
-/**
- * 初始化 LINE LIFF 並取得使用者資料
- */
+
+// =========================================
+// LIFF 初始化
+// =========================================
+
 async function initializeLiff() {
+
     const isLocalhost =
-        window.location.hostname === "127.0.0.1" ||
-        window.location.hostname === "localhost";
+        ["127.0.0.1", "localhost"].includes(window.location.hostname);
 
     try {
+
         await liff.init({
             liffId: CONFIG.LIFF_ID
         });
 
-        console.log("LIFF 初始化成功");
+        console.log("✅ LIFF 初始化成功");
 
-        // 本機測試不強制登入 LINE
+        // =========================
+        // 本機測試模式
+        // =========================
+
         if (isLocalhost) {
-            console.log("目前為本機測試");
 
-            if (typeof updateSalesName === "function") {
-                updateSalesName("本機測試");
-            }
-
+            handleLocalhost();
             return;
+
         }
 
-        // 正式網址若尚未登入，就導向 LINE 登入
+        // =========================
+        // 尚未登入 LINE
+        // =========================
+
         if (!liff.isLoggedIn()) {
-            console.log("目前尚未登入 LINE");
+
+            console.log("➡️ 導向 LINE Login...");
 
             liff.login({
                 redirectUri: window.location.href
             });
 
             return;
+
         }
+
+        // =========================
+        // 已登入，取得 Profile
+        // =========================
+
+        await loadProfile();
+
+    } catch (error) {
+
+        console.error("❌ LIFF 初始化失敗", error);
+
+        setSalesName("無法取得 LINE 名稱");
+
+    }
+
+}
+
+
+// =========================================
+// Localhost 模式
+// =========================================
+
+function handleLocalhost() {
+
+    console.log("💻 Localhost 測試模式");
+
+    lineProfile = {
+
+        userId: "LOCAL_TEST",
+
+        displayName: "本機測試"
+
+    };
+
+    setSalesName(lineProfile.displayName);
+
+}
+
+
+// =========================================
+// 取得 LINE 使用者資料
+// =========================================
+
+async function loadProfile() {
+
+    try {
 
         lineProfile = await liff.getProfile();
 
-        console.log("LINE 使用者：", lineProfile.displayName);
+        console.log("👤 LINE User");
 
-        if (typeof updateSalesName === "function") {
-            updateSalesName(lineProfile.displayName);
-        }
+        console.log(lineProfile);
+
+        setSalesName(lineProfile.displayName);
+
     } catch (error) {
-        console.error("LIFF 初始化失敗：", error);
 
-        if (typeof updateSalesName === "function") {
-            updateSalesName("無法取得 LINE 名稱");
-        }
+        console.error("取得 Profile 失敗", error);
+
+        setSalesName("未知使用者");
+
     }
+
 }
+
+
+// =========================================
+// 更新畫面上的業務名稱
+// =========================================
+
+function setSalesName(name) {
+
+    if (typeof updateSalesName === "function") {
+
+        updateSalesName(name);
+
+    }
+
+}
+
+
+// =========================================
+// 取得 LINE Profile
+// =========================================
+
+function getLineProfile() {
+
+    return lineProfile;
+
+}
+
+
+// =========================================
+// 取得 User ID
+// =========================================
+
+function getUserId() {
+
+    if (!lineProfile) {
+
+        return "";
+
+    }
+
+    return lineProfile.userId;
+
+}
+
+
+// =========================================
+// 取得使用者名稱
+// =========================================
+
+function getDisplayName() {
+
+    if (!lineProfile) {
+
+        return "";
+
+    }
+
+    return lineProfile.displayName;
+
+}
+
+
+// =========================================
+// 是否登入
+// =========================================
+
+function isLineLogin() {
+
+    if (["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+
+        return true;
+
+    }
+
+    return liff.isLoggedIn();
+
+}
+
+
+// =========================================
+// 登出
+// =========================================
+
+function logout() {
+
+    if (!["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+
+        liff.logout();
+
+        location.reload();
+
+    }
+
+}
+
+
+// =========================================
+// 啟動 LIFF
+// =========================================
+
+initializeLiff();

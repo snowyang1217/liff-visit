@@ -218,3 +218,33 @@ textarea::placeholder {
         padding-top: 34px;
     }
 }
+
+.customer-result{
+
+    margin-top:8px;
+
+}
+
+.customer-item{
+
+    background:#fff;
+
+    border:1px solid #d9d9d9;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    margin-bottom:6px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.customer-item:hover{
+
+    background:#eef5ff;
+
+}
