@@ -1,104 +1,99 @@
-function getLocalDateTime() {
+(function () {
+  function escapeHtml(value = "") {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
+  }
+
+  function isConfigured(value) {
+    return Boolean(value && !String(value).startsWith("請貼上"));
+  }
+
+  function localDateTime() {
     const now = new Date();
+    const shifted = new Date(
+      now.getTime() - now.getTimezoneOffset() * 60000
+    );
 
-    return {
-        date: new Intl.DateTimeFormat("en-CA", {
-            timeZone: "Asia/Taipei",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit"
-        }).format(now),
-        time: new Intl.DateTimeFormat("zh-TW", {
-            timeZone: "Asia/Taipei",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        }).format(now)
-    };
-}
+    return shifted.toISOString().slice(0, 16);
+  }
 
-function showMessage(message, type = "success") {
-    const messageElement = document.getElementById("formMessage");
+  function showMessage(text, type = "") {
+    const message = document.getElementById("formMessage");
+    if (!message) return;
 
-    if (!messageElement) {
-        return;
-    }
+    message.textContent = text;
+    message.className = `message ${type}`.trim();
+    message.hidden = false;
+  }
 
-    const isError = type === "error";
+  function hideMessage() {
+    const message = document.getElementById("formMessage");
+    if (!message) return;
 
-    messageElement.textContent = message;
-    messageElement.hidden = false;
-    messageElement.style.margin = "16px 0";
-    messageElement.style.padding = "12px 14px";
-    messageElement.style.borderRadius = "10px";
-    messageElement.style.lineHeight = "1.5";
-    messageElement.style.backgroundColor = isError ? "#ffebee" : "#e8f5e9";
-    messageElement.style.color = isError ? "#c62828" : "#197447";
-    messageElement.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-    });
-}
+    message.hidden = true;
+    message.textContent = "";
+    message.className = "message";
+  }
 
-function hideMessage() {
-    const messageElement = document.getElementById("formMessage");
+  function showLoading(button, text = "處理中…") {
+    if (!button) return;
 
-    if (messageElement) {
-        messageElement.hidden = true;
-        messageElement.textContent = "";
-    }
-}
-
-function showLoading(button, text = "送出中…") {
-    if (!button) {
-        return;
-    }
-
-    button.dataset.originalText = button.textContent.trim();
+    button.dataset.originalText = button.textContent;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
     button.textContent = text;
-}
+  }
 
-function hideLoading(button) {
-    if (!button) {
-        return;
-    }
+  function hideLoading(button) {
+    if (!button) return;
 
     button.disabled = false;
     button.removeAttribute("aria-busy");
-    button.textContent = button.dataset.originalText || "送出拜訪紀錄";
-    delete button.dataset.originalText;
-}
+    button.textContent =
+      button.dataset.originalText || "送出拜訪紀錄";
 
-async function postJson(url, payload, timeoutMs = 15000) {
+    delete button.dataset.originalText;
+  }
+
+  async function fetchJson(url, options = {}) {
+    const config = window.APP_CONFIG || {};
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    const timeout = window.setTimeout(
+      () => controller.abort(),
+      config.REQUEST_TIMEOUT_MS || 15000
+    );
 
     try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-            signal: controller.signal
-        });
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-        const responseText = await response.text();
-
-        try {
-            return responseText ? JSON.parse(responseText) : {};
-        } catch {
-            return {
-                message: responseText
-            };
-        }
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
     } finally {
-        window.clearTimeout(timeoutId);
+      window.clearTimeout(timeout);
     }
-}
+  }
+
+  window.AppUtils = Object.freeze({
+    escapeHtml,
+    isConfigured,
+    localDateTime,
+    showMessage,
+    hideMessage,
+    showLoading,
+    hideLoading,
+    fetchJson
+  });
+})();
