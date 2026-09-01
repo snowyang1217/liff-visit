@@ -22,7 +22,10 @@
 
   function render() {
     const app = document.getElementById("app");
-    const salesName = window.AppState?.getSalesName() || "";
+
+    const now = new Date();
+    const visitDate = now.toISOString().slice(0, 10);
+    const visitTime = now.toTimeString().slice(0, 5);
 
     app.innerHTML = `
       <main class="visit-page">
@@ -97,72 +100,126 @@
           <section class="card">
             <h2>費用（選填）</h2>
 
-            <div class="form-grid">
-              ${field(
-                "油錢",
-                `<input type="number"
-                        name="fuel"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                        placeholder="0">`
-              )}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="contact">聯絡人</label>
+                        <input
+                            id="contact"
+                            name="contact"
+                            type="text"
+                            placeholder="例如：王主任"
+                        >
+                    </div>
 
-              ${field(
-                "停車費",
-                `<input type="number"
-                        name="parking"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                        placeholder="0">`
-              )}
+                    <div class="form-group">
+                        <label for="phone">聯絡電話</label>
+                        <input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            placeholder="例如：03-1234567"
+                        >
+                    </div>
+                </div>
 
-              ${field(
-                "交際費",
-                `<input type="number"
-                        name="entertainment"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                        placeholder="0">`
-              )}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="visitType">拜訪類型 <b>*</b></label>
+                        <select id="visitType" name="visitType" required>
+                            <option value="">請選擇</option>
+                            <option value="例行拜訪">例行拜訪</option>
+                            <option value="新客拜訪">新客拜訪</option>
+                            <option value="產品介紹">產品介紹</option>
+                            <option value="售後服務">售後服務</option>
+                            <option value="標案拜訪">標案拜訪</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
 
-              ${field(
-                "雜支",
-                `<input type="number"
-                        name="misc"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                        placeholder="0">`
-              )}
+                    <div class="form-group">
+                        <label for="productCategory">產品類別</label>
+                        <select id="productCategory" name="productCategory">
+                            <option value="">請選擇</option>
+                            <option value="醫療設備">醫療設備</option>
+                            <option value="醫療耗材">醫療耗材</option>
+                            <option value="維修保養">維修保養</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
 
-              ${field(
-                "eTag",
-                `<input type="number"
-                        name="etag"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                        placeholder="0">`
-              )}
-            </div>
-          </section>
+                <div class="form-group">
+                    <label for="subject">拜訪主旨 <b>*</b></label>
+                    <input
+                        id="subject"
+                        name="subject"
+                        type="text"
+                        placeholder="例如：血糖機產品介紹"
+                        required
+                    >
+                </div>
 
-          <div id="formMessage"
-               class="message"
-               role="status"
-               hidden></div>
+                <div class="form-group">
+                    <label for="content">拜訪內容 <b>*</b></label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        rows="5"
+                        placeholder="請記錄本次拜訪重點"
+                        required
+                    ></textarea>
+                </div>
 
-          <button id="submitButton"
-                  class="primary-button"
-                  type="submit">
-            送出拜訪紀錄
-          </button>
+                <div class="form-group">
+                    <label for="customerNeed">客戶需求</label>
+                    <textarea
+                        id="customerNeed"
+                        name="customerNeed"
+                        rows="3"
+                        placeholder="請記錄客戶提出的需求"
+                    ></textarea>
+                </div>
 
-        </form>
-      </main>
+                <div class="form-group">
+                    <label for="result">拜訪結果 <b>*</b></label>
+                    <select id="result" name="result" required>
+                        <option value="">請選擇</option>
+                        <option value="已成交">已成交</option>
+                        <option value="報價中">報價中</option>
+                        <option value="待追蹤">待追蹤</option>
+                        <option value="無需求">無需求</option>
+                        <option value="拜訪完成">拜訪完成</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="nextFollowDate">下次追蹤日期</label>
+                    <input
+                        id="nextFollowDate"
+                        name="nextFollowDate"
+                        type="date"
+                    >
+                </div>
+
+                <div class="action-grid">
+                    <button type="button" class="secondary-button" disabled>
+                        📷 拍照
+                    </button>
+
+                    <button type="button" class="secondary-button" disabled>
+                        📍 取得定位
+                    </button>
+                </div>
+
+                <p class="feature-note">
+                    拍照與定位功能將在下一階段開放。
+                </p>
+
+                <button id="submitButton" type="submit" class="submit-button">
+                    送出拜訪紀錄
+                </button>
+            </form>
+        </main>
     `;
 
     document
@@ -170,77 +227,11 @@
       .addEventListener("submit", submitVisit);
   }
 
-  async function submitVisit(event) {
-    event.preventDefault();
+    visitForm.addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    const form = event.currentTarget;
-    const button = document.getElementById("submitButton");
-    const webhookUrl = config.WEBHOOK?.CREATE_VISIT;
+        alert("表單畫面測試成功，下一步再串接 Make。");
+    });
 
-    hideMessage();
-
-    if (!isConfigured(webhookUrl)) {
-      showMessage(
-        "請先在 config.js 設定 Make Webhook。",
-        "error"
-      );
-      return;
-    }
-
-    const payload = Object.fromEntries(
-      new FormData(form).entries()
-    );
-
-    payload.lineUserId =
-      window.AppState?.profile?.userId || "";
-
-    payload.lineDisplayName =
-      window.AppState?.profile?.displayName || "";
-
-    payload.source = "LINE_LIFF";
-    payload.submittedAt = new Date().toISOString();
-
-    showLoading(button, "送出中…");
-
-    try {
-      const result = await fetchJson(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (result && result.success === false) {
-        throw new Error(result.message || "Make 回傳失敗");
-      }
-
-      showMessage(
-        "拜訪紀錄已成功送出。",
-        "success"
-      );
-
-      form.reset();
-
-      form.elements.visitAt.value =
-        localDateTime();
-
-      form.elements.salesName.value =
-        window.AppState?.getSalesName() || "";
-
-    } catch (error) {
-      console.error("送出失敗：", error);
-
-      showMessage(
-        "送出失敗，請確認 Make Webhook 設定。",
-        "error"
-      );
-    } finally {
-      hideLoading(button);
-    }
-  }
-
-  window.VisitPage = {
-    render
-  };
-})();
+    initializeLiff();
+}
