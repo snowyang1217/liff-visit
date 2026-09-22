@@ -11,6 +11,13 @@
 let lineProfile = null;
 
 
+// 建立全域業務狀態
+window.APP_STATE = {
+    salesName: "",
+    salesLineUserId: ""
+};
+
+
 // =========================================
 // LIFF 初始化
 // =========================================
@@ -18,7 +25,15 @@ let lineProfile = null;
 async function initializeLiff() {
 
     const isLocalhost =
-        ["127.0.0.1", "localhost"].includes(window.location.hostname);
+        ["127.0.0.1", "localhost"].includes(
+            window.location.hostname
+        );
+
+    // 本機測試模式不需要執行 LIFF 初始化
+    if (isLocalhost) {
+        handleLocalhost();
+        return;
+    }
 
     try {
 
@@ -28,21 +43,7 @@ async function initializeLiff() {
 
         console.log("✅ LIFF 初始化成功");
 
-        // =========================
-        // 本機測試模式
-        // =========================
-
-        if (isLocalhost) {
-
-            handleLocalhost();
-            return;
-
-        }
-
-        // =========================
         // 尚未登入 LINE
-        // =========================
-
         if (!liff.isLoggedIn()) {
 
             console.log("➡️ 導向 LINE Login...");
@@ -52,23 +53,22 @@ async function initializeLiff() {
             });
 
             return;
-
         }
 
-        // =========================
-        // 已登入，取得 Profile
-        // =========================
-
+        // 已登入，取得 LINE Profile
         await loadProfile();
 
     } catch (error) {
 
         console.error("❌ LIFF 初始化失敗", error);
 
+        window.APP_STATE = {
+            salesName: "無法取得 LINE 名稱",
+            salesLineUserId: ""
+        };
+
         setSalesName("無法取得 LINE 名稱");
-
     }
-
 }
 
 
@@ -81,15 +81,18 @@ function handleLocalhost() {
     console.log("💻 Localhost 測試模式");
 
     lineProfile = {
-
         userId: "LOCAL_TEST",
-
         displayName: "本機測試"
-
     };
 
-    setSalesName(lineProfile.displayName);
+    window.APP_STATE = {
+        salesName: lineProfile.displayName,
+        salesLineUserId: lineProfile.userId
+    };
 
+    console.log("本機測試資料：", window.APP_STATE);
+
+    setSalesName(lineProfile.displayName);
 }
 
 
@@ -104,19 +107,30 @@ async function loadProfile() {
         lineProfile = await liff.getProfile();
 
         console.log("👤 LINE User");
-
         console.log(lineProfile);
 
-        setSalesName(lineProfile.displayName);
+        window.APP_STATE = {
+            salesName: lineProfile.displayName || "",
+            salesLineUserId: lineProfile.userId || ""
+        };
+
+        console.log("業務資料：", window.APP_STATE);
+
+        setSalesName(lineProfile.displayName || "未知使用者");
 
     } catch (error) {
 
-        console.error("取得 Profile 失敗", error);
+        console.error("❌ 取得 Profile 失敗", error);
+
+        lineProfile = null;
+
+        window.APP_STATE = {
+            salesName: "未知使用者",
+            salesLineUserId: ""
+        };
 
         setSalesName("未知使用者");
-
     }
-
 }
 
 
@@ -127,11 +141,8 @@ async function loadProfile() {
 function setSalesName(name) {
 
     if (typeof updateSalesName === "function") {
-
         updateSalesName(name);
-
     }
-
 }
 
 
@@ -140,9 +151,7 @@ function setSalesName(name) {
 // =========================================
 
 function getLineProfile() {
-
     return lineProfile;
-
 }
 
 
@@ -153,13 +162,10 @@ function getLineProfile() {
 function getUserId() {
 
     if (!lineProfile) {
-
         return "";
-
     }
 
-    return lineProfile.userId;
-
+    return lineProfile.userId || "";
 }
 
 
@@ -170,13 +176,10 @@ function getUserId() {
 function getDisplayName() {
 
     if (!lineProfile) {
-
         return "";
-
     }
 
-    return lineProfile.displayName;
-
+    return lineProfile.displayName || "";
 }
 
 
@@ -186,14 +189,16 @@ function getDisplayName() {
 
 function isLineLogin() {
 
-    if (["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+    const isLocalhost =
+        ["127.0.0.1", "localhost"].includes(
+            window.location.hostname
+        );
 
+    if (isLocalhost) {
         return true;
-
     }
 
     return liff.isLoggedIn();
-
 }
 
 
@@ -203,14 +208,16 @@ function isLineLogin() {
 
 function logout() {
 
-    if (!["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+    const isLocalhost =
+        ["127.0.0.1", "localhost"].includes(
+            window.location.hostname
+        );
+
+    if (!isLocalhost && liff.isLoggedIn()) {
 
         liff.logout();
-
         location.reload();
-
     }
-
 }
 
 

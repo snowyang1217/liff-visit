@@ -43,6 +43,7 @@
                 <input
                   name="salesName"
                   value="${escapeHtml(salesName)}"
+                  readonly
                   required
                 >
               </div>
@@ -124,7 +125,7 @@
 
             <div class="form-group">
               <label>拜訪類型</label>
-              <select name="visitType" required>
+              <select name="visitType">
                 <option value="">請選擇</option>
                 <option value="例行拜訪">例行拜訪</option>
                 <option value="新客拜訪">新客拜訪</option>
@@ -151,7 +152,6 @@
               <input
                 name="subject"
                 placeholder="例如：血糖機產品介紹"
-                required
               >
             </div>
 
@@ -161,7 +161,6 @@
                 name="content"
                 rows="5"
                 placeholder="請記錄本次拜訪重點"
-                required
               ></textarea>
             </div>
 
@@ -176,7 +175,7 @@
 
             <div class="form-group">
               <label>拜訪結果</label>
-              <select name="result" required>
+              <select name="result">
                 <option value="">請選擇</option>
                 <option value="已成交">已成交</option>
                 <option value="報價中">報價中</option>
@@ -201,32 +200,61 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>油錢</label>
-                <input name="fuelCost" type="number" min="0">
+                <input
+                  name="fuelCost"
+                  type="number"
+                  min="0"
+                  value="0"
+                >
               </div>
 
               <div class="form-group">
                 <label>停車費</label>
-                <input name="parkingCost" type="number" min="0">
+                <input
+                  name="parkingCost"
+                  type="number"
+                  min="0"
+                  value="0"
+                >
               </div>
 
               <div class="form-group">
                 <label>交際費</label>
-                <input name="entertainmentCost" type="number" min="0">
+                <input
+                  name="entertainmentCost"
+                  type="number"
+                  min="0"
+                  value="0"
+                >
               </div>
 
               <div class="form-group">
                 <label>雜支</label>
-                <input name="miscCost" type="number" min="0">
+                <input
+                  name="miscCost"
+                  type="number"
+                  min="0"
+                  value="0"
+                >
               </div>
 
               <div class="form-group">
                 <label>eTag</label>
-                <input name="eTag" type="number" min="0">
+                <input
+                  name="eTag"
+                  type="number"
+                  min="0"
+                  value="0"
+                >
               </div>
             </div>
           </section>
 
-          <div id="formMessage" class="message" hidden></div>
+          <div
+            id="formMessage"
+            class="message"
+            hidden
+          ></div>
 
           <button
             id="submitButton"
@@ -291,14 +319,24 @@
       const data = Object.fromEntries(formData.entries());
 
       const payload = {
-        salesName: data.salesName || "",
+        salesName:
+          window.APP_STATE?.salesName ||
+          data.salesName ||
+          "",
+
+        salesLineUserId:
+          window.APP_STATE?.salesLineUserId ||
+          "",
+
         visitAt: data.visitAt || "",
         hospital: data.hospital || "",
         department: data.department || "",
         customerName: data.customerName || "",
         reason: data.reason || "",
+
         contact: data.contact || "",
         phone: data.phone || "",
+
         visitType: data.visitType || "",
         productCategory: data.productCategory || "",
         subject: data.subject || "",
@@ -306,13 +344,17 @@
         customerNeed: data.customerNeed || "",
         result: data.result || "",
         nextFollowDate: data.nextFollowDate || "",
+
         fuelCost: Number(data.fuelCost || 0),
         parkingCost: Number(data.parkingCost || 0),
         entertainmentCost: Number(data.entertainmentCost || 0),
         miscCost: Number(data.miscCost || 0),
         eTag: Number(data.eTag || 0),
+
         submittedAt: new Date().toISOString()
       };
+
+      console.log("準備送出的資料：", payload);
 
       await fetchJson(webhookUrl, {
         method: "POST",
@@ -322,15 +364,21 @@
         body: JSON.stringify(payload)
       });
 
-      showMessage("拜訪紀錄已成功送出。", "success");
+      showMessage(
+        "拜訪紀錄已成功送出。",
+        "success"
+      );
 
       form.reset();
 
       form.elements.visitAt.value = localDateTime();
+
       form.elements.salesName.value =
         window.APP_STATE?.salesName || "";
+
     } catch (error) {
-      console.error(error);
+      console.error("送出拜訪紀錄失敗：", error);
+
       showMessage(
         `送出失敗：${error.message || "請稍後再試"}`,
         "error"
