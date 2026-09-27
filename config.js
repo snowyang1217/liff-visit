@@ -6,7 +6,7 @@ const CONFIG = {
             "https://hook.us2.make.com/7dw8gtigjf0oh3oau1quwr7j928yso5s",
 
         SEARCH_CUSTOMER:
-            "https://hook.us2.make.com/dwmclug4vlb9h9p9l1sivmvayvfb1l58"
+            "https://hook.us2.make.com/r6rn3drmdt16yuazdwvabq2v1j8q775j"
     },
 
     FEATURE: {
