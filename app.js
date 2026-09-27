@@ -38,7 +38,7 @@ async function initializeLiff() {
     try {
 
         await liff.init({
-            liffId: CONFIG.LIFF_ID
+            liffId: window.APP_CONFIG.LIFF_ID
         });
 
         console.log("✅ LIFF 初始化成功");
