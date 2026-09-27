@@ -1,39 +1,20 @@
 const CONFIG = {
+  LIFF_ID: "2010246946-BKtkjkvh",
 
-    // =========================
-    // LIFF
-    // =========================
-    LIFF_ID: "2010246946-BKtkjkvh",
+  WEBHOOK: {
+    CREATE_VISIT:
+      "https://hook.us2.make.com/7dw8gtigjf0oh3oau1quwr7j928yso5s",
 
-    // =========================
-    // Make Webhook
-    // =========================
-    WEBHOOK: {
+    SEARCH_CUSTOMER:
+      "https://hook.us2.make.com/pquw6gsrvtd1c937lljbguq5xh6y7o7a"
+  },
 
-        // 建立拜訪紀錄
-        CREATE_VISIT:
-            "https://hook.us2.make.com/7dw8gtigjf0oh3oau1quwr7j928yso5s",
-
-        // 客戶搜尋（之後建立第二個 Make Scenario 再填入）
-        SEARCH_CUSTOMER: ""
-
-    },
-
-    // =========================
-    // 功能開關
-    // =========================
-    FEATURE: {
-
-        GPS: false,
-
-        CAMERA: false,
-
-        INVENTORY: false,
-
-        DEBUG: true
-
-    }
-
+  FEATURE: {
+    GPS: false,
+    CAMERA: false,
+    INVENTORY: false,
+    DEBUG: true
+  }
 };
 
 window.APP_CONFIG = CONFIG;

@@ -13,6 +13,8 @@
     fetchJson
   } = utils;
 
+  let customerSearchTimer = null;
+
   function render() {
     const app = document.getElementById("app");
     const salesName = window.APP_STATE?.salesName || "";
@@ -38,6 +40,7 @@
             <h2>拜訪資料</h2>
 
             <div class="form-grid">
+
               <div class="form-group">
                 <label>業務人員</label>
                 <input
@@ -58,13 +61,32 @@
                 >
               </div>
 
-              <div class="form-group">
+              <div class="form-group customer-search-group">
                 <label>醫院</label>
+
                 <input
                   name="hospital"
-                  placeholder="請輸入醫院名稱"
+                  id="hospitalInput"
+                  placeholder="請輸入醫院名稱關鍵字"
+                  autocomplete="off"
                   required
                 >
+
+                <input
+                  type="hidden"
+                  name="customerId"
+                  id="customerId"
+                >
+
+                <div
+                  id="customerResults"
+                  class="customer-results"
+                  hidden
+                ></div>
+
+                <small id="customerHint">
+                  請輸入至少 2 個字後搜尋，再從清單選擇醫院
+                </small>
               </div>
 
               <div class="form-group">
@@ -94,6 +116,7 @@
                   required
                 ></textarea>
               </div>
+
             </div>
           </section>
 
@@ -101,6 +124,7 @@
             <h2>聯絡資料</h2>
 
             <div class="form-grid">
+
               <div class="form-group">
                 <label>聯絡人</label>
                 <input
@@ -117,6 +141,7 @@
                   placeholder="例如：03-1234567"
                 >
               </div>
+
             </div>
           </section>
 
@@ -198,6 +223,7 @@
             <h2>費用（選填）</h2>
 
             <div class="form-grid">
+
               <div class="form-group">
                 <label>油錢</label>
                 <input
@@ -247,6 +273,7 @@
                   value="0"
                 >
               </div>
+
             </div>
           </section>
 
@@ -296,7 +323,179 @@
 
     if (form) {
       form.addEventListener("submit", submitVisit);
+      setupCustomerSearch();
     }
+  }
+
+  function setupCustomerSearch() {
+    const hospitalInput = document.getElementById("hospitalInput");
+    const customerIdInput = document.getElementById("customerId");
+    const resultsBox = document.getElementById("customerResults");
+
+    if (!hospitalInput || !customerIdInput || !resultsBox) return;
+
+    hospitalInput.addEventListener("input", () => {
+      const keyword = hospitalInput.value.trim();
+
+      // 只要重新輸入，就清除原本選取的客戶 ID
+      customerIdInput.value = "";
+
+      resultsBox.innerHTML = "";
+      resultsBox.hidden = true;
+
+      if (keyword.length < 2) {
+        return;
+      }
+
+      clearTimeout(customerSearchTimer);
+
+      customerSearchTimer = setTimeout(() => {
+        searchCustomers(keyword);
+      }, 500);
+    });
+  }
+
+  async function searchCustomers(keyword) {
+    const searchUrl = config.WEBHOOK?.SEARCH_CUSTOMER;
+    const resultsBox = document.getElementById("customerResults");
+
+    if (!resultsBox) return;
+
+    if (!isConfigured(searchUrl)) {
+      resultsBox.hidden = false;
+      resultsBox.innerHTML = `
+        <div class="customer-empty">
+          尚未設定客戶搜尋 Webhook
+        </div>
+      `;
+      return;
+    }
+
+    resultsBox.hidden = false;
+    resultsBox.innerHTML = `
+      <div class="customer-loading">
+        搜尋中…
+      </div>
+    `;
+
+    try {
+      const response = await fetchJson(searchUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          keyword
+        })
+      });
+
+      console.log("客戶搜尋結果：", response);
+
+      /*
+       * 支援三種可能的 Make 回傳格式：
+       *
+       * 1. { customers: [...] }
+       * 2. { result: [...] }
+       * 3. { data: { result: [...] } }
+       */
+      const customers =
+        response?.customers ||
+        response?.result ||
+        response?.data?.result ||
+        [];
+
+      if (!Array.isArray(customers) || customers.length === 0) {
+        resultsBox.innerHTML = `
+          <div class="customer-empty">
+            找不到符合「${escapeHtml(keyword)}」的客戶
+          </div>
+        `;
+        return;
+      }
+
+      const validCustomers = customers.filter((customer) => {
+        return (
+          customer &&
+          customer.id &&
+          customer.name &&
+          customer.name !== false
+        );
+      });
+
+      if (validCustomers.length === 0) {
+        resultsBox.innerHTML = `
+          <div class="customer-empty">
+            找不到符合的客戶
+          </div>
+        `;
+        return;
+      }
+
+      resultsBox.innerHTML = validCustomers
+        .map((customer) => {
+          const phone =
+            customer.phone && customer.phone !== false
+              ? `<small>${escapeHtml(String(customer.phone))}</small>`
+              : "";
+
+          return `
+            <button
+              type="button"
+              class="customer-option"
+              data-id="${escapeHtml(String(customer.id))}"
+              data-name="${escapeHtml(String(customer.name))}"
+            >
+              <strong>${escapeHtml(String(customer.name))}</strong>
+              ${phone}
+            </button>
+          `;
+        })
+        .join("");
+
+      resultsBox
+        .querySelectorAll(".customer-option")
+        .forEach((button) => {
+          button.addEventListener("click", () => {
+            selectCustomer(
+              button.dataset.id,
+              button.dataset.name
+            );
+          });
+        });
+    } catch (error) {
+      console.error("搜尋客戶失敗：", error);
+
+      resultsBox.innerHTML = `
+        <div class="customer-empty">
+          搜尋失敗：${escapeHtml(error.message || "請稍後再試")}
+        </div>
+      `;
+    }
+  }
+
+  function selectCustomer(customerId, customerName) {
+    const hospitalInput = document.getElementById("hospitalInput");
+    const customerIdInput = document.getElementById("customerId");
+    const resultsBox = document.getElementById("customerResults");
+
+    if (!hospitalInput || !customerIdInput || !resultsBox) {
+      return;
+    }
+
+    hospitalInput.value = customerName;
+    customerIdInput.value = customerId;
+
+    resultsBox.hidden = false;
+    resultsBox.innerHTML = `
+      <div class="customer-selected">
+        已選擇：${escapeHtml(customerName)}
+      </div>
+    `;
+
+    console.log("已選擇客戶：", {
+      customerId,
+      customerName
+    });
   }
 
   async function submitVisit(event) {
@@ -312,11 +511,17 @@
       const webhookUrl = config.WEBHOOK?.CREATE_VISIT;
 
       if (!isConfigured(webhookUrl)) {
-        throw new Error("尚未設定 Make Webhook URL");
+        throw new Error("尚未設定建立拜訪紀錄 Webhook URL");
       }
 
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
+
+      const customerId = data.customerId || "";
+
+      if (!customerId) {
+        throw new Error("請先從搜尋結果選擇醫院");
+      }
 
       const payload = {
         salesName:
@@ -329,26 +534,46 @@
           "",
 
         visitAt: data.visitAt || "",
+
         hospital: data.hospital || "",
+
+        // 這是 Odoo Many2one 客戶 ID
+        customerId: customerId,
+
         department: data.department || "",
+
         customerName: data.customerName || "",
+
         reason: data.reason || "",
 
+        // 聯絡人目前是文字欄位
         contact: data.contact || "",
+
         phone: data.phone || "",
 
         visitType: data.visitType || "",
+
         productCategory: data.productCategory || "",
+
         subject: data.subject || "",
+
         content: data.content || "",
+
         customerNeed: data.customerNeed || "",
+
         result: data.result || "",
+
         nextFollowDate: data.nextFollowDate || "",
 
         fuelCost: Number(data.fuelCost || 0),
+
         parkingCost: Number(data.parkingCost || 0),
-        entertainmentCost: Number(data.entertainmentCost || 0),
+
+        entertainmentCost:
+          Number(data.entertainmentCost || 0),
+
         miscCost: Number(data.miscCost || 0),
+
         eTag: Number(data.eTag || 0),
 
         submittedAt: new Date().toISOString()
@@ -371,11 +596,26 @@
 
       form.reset();
 
-      form.elements.visitAt.value = localDateTime();
+      if (form.elements.visitAt) {
+        form.elements.visitAt.value = localDateTime();
+      }
 
-      form.elements.salesName.value =
-        window.APP_STATE?.salesName || "";
+      if (form.elements.salesName) {
+        form.elements.salesName.value =
+          window.APP_STATE?.salesName || "";
+      }
 
+      if (form.elements.customerId) {
+        form.elements.customerId.value = "";
+      }
+
+      const resultsBox =
+        document.getElementById("customerResults");
+
+      if (resultsBox) {
+        resultsBox.innerHTML = "";
+        resultsBox.hidden = true;
+      }
     } catch (error) {
       console.error("送出拜訪紀錄失敗：", error);
 
