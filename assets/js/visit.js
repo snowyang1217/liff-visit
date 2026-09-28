@@ -40,7 +40,6 @@
             <h2>拜訪資料</h2>
 
             <div class="form-grid">
-
               <div class="form-group">
                 <label>業務人員</label>
                 <input
@@ -116,32 +115,6 @@
                   required
                 ></textarea>
               </div>
-
-            </div>
-          </section>
-
-          <section class="card">
-            <h2>聯絡資料</h2>
-
-            <div class="form-grid">
-
-              <div class="form-group">
-                <label>聯絡人</label>
-                <input
-                  name="contact"
-                  placeholder="例如：王主任"
-                >
-              </div>
-
-              <div class="form-group">
-                <label>聯絡電話</label>
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="例如：03-1234567"
-                >
-              </div>
-
             </div>
           </section>
 
@@ -223,7 +196,6 @@
             <h2>費用（選填）</h2>
 
             <div class="form-grid">
-
               <div class="form-group">
                 <label>油錢</label>
                 <input
@@ -273,7 +245,6 @@
                   value="0"
                 >
               </div>
-
             </div>
           </section>
 
@@ -306,7 +277,6 @@
 
     hiddenFields.forEach((name) => {
       const input = document.querySelector(`[name="${name}"]`);
-
       if (!input) return;
 
       const group = input.closest(".form-group");
@@ -332,14 +302,14 @@
     const customerIdInput = document.getElementById("customerId");
     const resultsBox = document.getElementById("customerResults");
 
-    if (!hospitalInput || !customerIdInput || !resultsBox) return;
+    if (!hospitalInput || !customerIdInput || !resultsBox) {
+      return;
+    }
 
     hospitalInput.addEventListener("input", () => {
       const keyword = hospitalInput.value.trim();
 
-      // 只要重新輸入，就清除原本選取的客戶 ID
       customerIdInput.value = "";
-
       resultsBox.innerHTML = "";
       resultsBox.hidden = true;
 
@@ -391,13 +361,6 @@
 
       console.log("客戶搜尋結果：", response);
 
-      /*
-       * 支援三種可能的 Make 回傳格式：
-       *
-       * 1. { customers: [...] }
-       * 2. { result: [...] }
-       * 3. { data: { result: [...] } }
-       */
       const customers =
         response?.customers ||
         response?.result ||
@@ -433,11 +396,6 @@
 
       resultsBox.innerHTML = validCustomers
         .map((customer) => {
-          const phone =
-            customer.phone && customer.phone !== false
-              ? `<small>${escapeHtml(String(customer.phone))}</small>`
-              : "";
-
           return `
             <button
               type="button"
@@ -446,7 +404,6 @@
               data-name="${escapeHtml(String(customer.name))}"
             >
               <strong>${escapeHtml(String(customer.name))}</strong>
-              ${phone}
             </button>
           `;
         })
@@ -534,46 +491,24 @@
           "",
 
         visitAt: data.visitAt || "",
-
         hospital: data.hospital || "",
-
-        // 這是 Odoo Many2one 客戶 ID
-        customerId: customerId,
-
+        customerId,
         department: data.department || "",
-
         customerName: data.customerName || "",
-
         reason: data.reason || "",
 
-        // 聯絡人目前是文字欄位
-        contact: data.contact || "",
-
-        phone: data.phone || "",
-
         visitType: data.visitType || "",
-
         productCategory: data.productCategory || "",
-
         subject: data.subject || "",
-
         content: data.content || "",
-
         customerNeed: data.customerNeed || "",
-
         result: data.result || "",
-
         nextFollowDate: data.nextFollowDate || "",
 
         fuelCost: Number(data.fuelCost || 0),
-
         parkingCost: Number(data.parkingCost || 0),
-
-        entertainmentCost:
-          Number(data.entertainmentCost || 0),
-
+        entertainmentCost: Number(data.entertainmentCost || 0),
         miscCost: Number(data.miscCost || 0),
-
         eTag: Number(data.eTag || 0),
 
         submittedAt: new Date().toISOString()
