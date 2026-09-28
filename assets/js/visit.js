@@ -25,7 +25,7 @@
       <main class="visit-page">
         <header class="app-header">
           <div>
-            <p class="app-brand">捷旭醫療</p>
+            <p class="app-brand">捷旭有限公司</p>
             <h1>業務拜訪紀錄</h1>
           </div>
 
@@ -40,6 +40,7 @@
             <h2>拜訪資料</h2>
 
             <div class="form-grid">
+
               <div class="form-group">
                 <label>業務人員</label>
                 <input
@@ -83,7 +84,7 @@
                   hidden
                 ></div>
 
-                <small id="customerHint">
+                <small>
                   請輸入至少 2 個字後搜尋，再從清單選擇醫院
                 </small>
               </div>
@@ -115,6 +116,7 @@
                   required
                 ></textarea>
               </div>
+
             </div>
           </section>
 
@@ -149,7 +151,7 @@
               <label>拜訪主旨</label>
               <input
                 name="subject"
-                placeholder="例如：血糖機產品介紹"
+                placeholder="例如：產品介紹"
               >
             </div>
 
@@ -248,11 +250,7 @@
             </div>
           </section>
 
-          <div
-            id="formMessage"
-            class="message"
-            hidden
-          ></div>
+          <div id="formMessage" class="message" hidden></div>
 
           <button
             id="submitButton"
@@ -261,11 +259,12 @@
           >
             送出拜訪紀錄
           </button>
+
         </form>
       </main>
     `;
 
-    const hiddenFields = [
+    [
       "visitType",
       "productCategory",
       "subject",
@@ -273,10 +272,9 @@
       "customerNeed",
       "result",
       "nextFollowDate"
-    ];
-
-    hiddenFields.forEach((name) => {
+    ].forEach((name) => {
       const input = document.querySelector(`[name="${name}"]`);
+
       if (!input) return;
 
       const group = input.closest(".form-group");
@@ -403,7 +401,7 @@
               data-id="${escapeHtml(String(customer.id))}"
               data-name="${escapeHtml(String(customer.name))}"
             >
-              <strong>${escapeHtml(String(customer.name))}</strong>
+              ${escapeHtml(String(customer.name))}
             </button>
           `;
         })
@@ -419,6 +417,7 @@
             );
           });
         });
+
     } catch (error) {
       console.error("搜尋客戶失敗：", error);
 
@@ -448,11 +447,6 @@
         已選擇：${escapeHtml(customerName)}
       </div>
     `;
-
-    console.log("已選擇客戶：", {
-      customerId,
-      customerName
-    });
   }
 
   async function submitVisit(event) {
@@ -474,9 +468,7 @@
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      const customerId = data.customerId || "";
-
-      if (!customerId) {
+      if (!data.customerId) {
         throw new Error("請先從搜尋結果選擇醫院");
       }
 
@@ -492,7 +484,7 @@
 
         visitAt: data.visitAt || "",
         hospital: data.hospital || "",
-        customerId,
+        customerId: data.customerId || "",
         department: data.department || "",
         customerName: data.customerName || "",
         reason: data.reason || "",
@@ -524,10 +516,7 @@
         body: JSON.stringify(payload)
       });
 
-      showMessage(
-        "拜訪紀錄已成功送出。",
-        "success"
-      );
+      showMessage("拜訪紀錄已成功送出。", "success");
 
       form.reset();
 
@@ -540,10 +529,6 @@
           window.APP_STATE?.salesName || "";
       }
 
-      if (form.elements.customerId) {
-        form.elements.customerId.value = "";
-      }
-
       const resultsBox =
         document.getElementById("customerResults");
 
@@ -551,6 +536,7 @@
         resultsBox.innerHTML = "";
         resultsBox.hidden = true;
       }
+
     } catch (error) {
       console.error("送出拜訪紀錄失敗：", error);
 
